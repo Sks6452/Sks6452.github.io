@@ -1,1 +1,1423 @@
-hello world
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kumar Shubham - Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Define CSS variables for consistent heights */
+            --main-heading-height: 80px; /* Re-enabled height for the main portfolio heading */
+            --nav-height: 45px; /* Adjusted: Made navigation bar thinner */
+            --nav-margin-top: 15px; /* Added space between heading and nav */
+            /* Header height will now include both heading, nav, and the margin between them */
+            --header-total-height-full: calc(var(--main-heading-height) + var(--nav-height) + var(--nav-margin-top));
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            /* Initial padding-top is 0, will be dynamically adjusted by JS */
+        }
+
+        #bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            min-width: 100vw;
+            min-height: 100vh;
+            object-fit: cover;
+            z-index: -2; /* Ensure video is behind everything */
+            filter: brightness(0.6); /* Slightly dim the video for better text readability */
+        }
+
+        /* --- Fixed Header Container (for Main Heading and Navigation) --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 40; /* Increased z-index to ensure it's above all overlays */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background for fixed header */
+            backdrop-filter: blur(5px); /* Optional: blur effect */
+            box-sizing: border-box;
+            height: var(--main-heading-height); /* Initially only main heading height */
+            display: flex;
+            flex-direction: column; /* Stack heading and nav vertically */
+            justify-content: flex-start; /* Align items to the top */
+            align-items: center; /* Center items horizontally */
+            opacity: 0; /* Initially hidden */
+            transform: translateY(-100%); /* Start off-screen above the viewport */
+            transition: opacity 1s ease-out, transform 1s ease-out, height 0.5s ease-out; /* Smooth transitions for appearance and height change */
+            overflow: hidden; /* Hide content that exceeds initial height */
+        }
+
+        header.show {
+            opacity: 1;
+            transform: translateY(0); /* Slide down into view */
+            height: var(--header-total-height-full); /* When header shows, it takes full height */
+        }
+
+        /* --- Initial Banner Styles --- */
+        #initial-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 25; /* Highest z-index for initial banner */
+            background-color: transparent; /* Video shows through */
+            color: white;
+            font-size: 6.5em; /* Significantly bigger heading */
+            font-weight: 700;
+            text-shadow: 0 0 25px rgba(0, 255, 255, 1), 0 0 50px rgba(0, 255, 255, 0.9), 0 0 75px rgba(0, 255, 255, 0.7); /* More radiant glow */
+            opacity: 0; /* Initially hidden */
+            transform: translateY(0);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+            pointer-events: none; /* Allow clicks to pass through initially */
+            padding: 0 2rem; /* Add padding to prevent overlap on smaller screens */
+            box-sizing: border-box; /* Include padding in width */
+            text-align: center; /* Ensure text is centered */
+            line-height: 1.1; /* Adjust line height for large text */
+        }
+
+        #initial-banner.show {
+            opacity: 1; /* Fade in */
+            pointer-events: auto; /* Enable pointer events when shown */
+        }
+
+        #initial-banner.roll-up {
+            transform: translateY(-100vh); /* Roll up effect */
+            opacity: 0; /* Fade out */
+            transition: opacity 1s ease-in, transform 1s ease-in; /* Faster transition for rolling up */
+        }
+
+        /* --- Main Content Area (for Intro Screen and Full Portfolio) --- */
+        main {
+            position: relative;
+            width: 100%;
+            flex-grow: 1; /* Allow main to take up remaining space */
+            /* padding-top will be set dynamically by JS */
+            box-sizing: border-box;
+        }
+
+        /* --- Intro Screen (Summary & Photo) Styles --- */
+        #intro-screen {
+            width: 100vw;
+            height: calc(100vh - var(--header-total-height-full)); /* Fill remaining viewport height below header */
+            display: flex; /* Re-enabled display */
+            flex-direction: row; /* Ensure it's row for side-by-side layout */
+            z-index: 10; /* Above video */
+            opacity: 0; /* Initially hidden */
+            transform: scale(1.1); /* Start zoomed in */
+            visibility: hidden; /* Hide completely initially */
+            transition: opacity 1s ease-out, transform 1s ease-out, visibility 0s linear 1s; /* Transition for reveal */
+            background-color: transparent; /* Video shows through */
+            box-sizing: border-box;
+            /* padding-top adjusted dynamically in JS to account for header height */
+        }
+
+        #intro-screen.show-intro {
+            opacity: 1; /* Fade in */
+            transform: scale(1); /* Zoom out */
+            visibility: visible; /* Make visible */
+            transition: opacity 1s ease-out, transform 1s ease-out; /* Remove visibility delay when showing */
+        }
+
+        #intro-screen.fade-out {
+            opacity: 0;
+            transform: translateY(-100vh); /* Slide up effect */
+            pointer-events: none; /* Disable interactions after fade out */
+            transition: opacity 1s ease-out, transform 1s ease-out; /* Ensure smooth fade out */
+        }
+
+        #summary-panel {
+            width: 45%; /* Left side for summary */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background-color: transparent; /* Video shows through */
+            border-right: none;
+            box-shadow: none;
+            text-align: center;
+            color: white; /* Text color for glowing effect */
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.6); /* Glowing effect */
+        }
+
+        #typed-summary {
+            font-family: 'monospace', 'Courier New', Courier, sans-serif; /* Adjusted font for typewriting effect */
+            font-size: 1.3em; /* Adjusted font size for summary text to prevent overlap */
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            white-space: pre-wrap;
+            overflow: hidden;
+            border-right: .15em solid #00FFFF; /* Blinking cursor, now cyan for futuristic glow */
+            animation: blinking-cursor 0.75s step-end infinite;
+            max-width: 90%;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.6); /* Re-added glowing text shadow */
+        }
+
+        /* Keyframes for blinking cursor */
+        @keyframes blinking-cursor {
+            from, to { border-color: transparent }
+            50% { border-color: #00FFFF; } /* Blinking cursor color */
+        }
+
+        #explore-button, .go-back-button, #get-in-touch-button { /* Added #get-in-touch-button */
+            background-color: #39FF14; /* Neon green */
+            color: #000000; /* Black text for contrast */
+            font-weight: 700;
+            padding: 0.75rem 2rem; /* Adjusted padding to make it thinner */
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.7);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 1.0em; /* Adjusted font size for thinner button */
+            margin-top: 2rem; /* Added margin-top for spacing */
+        }
+
+        #explore-button:hover, .go-back-button:hover, #get-in-touch-button:hover { /* Added #get-in-touch-button */
+            background-color: #00FFFF; /* Cyan on hover */
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.9);
+            transform: scale(1.05);
+        }
+
+        /* Style for disabled Get in Touch button */
+        #get-in-touch-button.disabled-button {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #video-photo-panel {
+            width: 55%; /* Right side for video and photo */
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Changed to center to allow more flexible positioning */
+            padding-bottom: 0; /* Removed fixed padding-bottom */
+            background-color: transparent; /* Video shows through */
+        }
+
+        .photo-placeholder {
+            width: 250px;
+            height: 250px;
+            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white fallback */
+            border-radius: 50%; /* Circular photo placeholder */
+            border: 3px solid #00FFFF; /* Cyan border */
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Hide parts of the image that go outside the circle */
+            margin-top: -150px; /* Adjusted: Pushed photo further up */
+        }
+
+        .photo-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures the image covers the circle without distortion */
+            border-radius: 50%; /* Maintains the circular shape of the image */
+        }
+
+        /* --- Main Navigation Bar Styles (Initially hidden, appears with zoom out) --- */
+        #main-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px; /* Reduced gap for thinner look */
+            padding: 10px 20px; /* Reduced padding for thinner look */
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background for nav */
+            backdrop-filter: blur(5px);
+            opacity: 0; /* Initially hidden */
+            transform: scale(0.8); /* Start zoomed in */
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            width: 100%; /* Ensure it spans full width */
+            box-sizing: border-box;
+            margin-top: var(--nav-margin-top); /* Added margin-top to push nav down */
+        }
+
+        #main-nav.show-nav {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #main-nav a {
+            font-size: 1.0em; /* Slightly reduced font size for thinner nav */
+            font-weight: 600;
+            text-decoration: none;
+            color: #00FFFF; /* Cyan for nav links */
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.6);
+        }
+
+        #main-nav a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+            transition: left 0.7s ease-in-out;
+            z-index: 0;
+        }
+
+        #main-nav a:hover::before {
+            left: 100%;
+        }
+
+        #main-nav a:hover {
+            color: #FFFFFF; /* White on hover */
+            background-color: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+            transform: translateY(-2px);
+            text-shadow: 0 0 8px #FFFFFF, 0 0 15px #FFFFFF;
+        }
+
+        /* --- Full Portfolio Content Section Styles --- */
+        #full-portfolio {
+            opacity: 0; /* Keep initially hidden for animation */
+            transform: scale(1.1); /* Keep for animation */
+            transition: opacity 1s ease-out, transform 1s ease-out;
+            display: flex; /* Set to flex so children can be laid out */
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            z-index: 5; /* Below header, above video */
+            min-height: calc(100vh - var(--header-total-height-full) - 40px); /* Adjust for margin below header (only nav height) */
+            box-sizing: border-box;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.6);
+            padding-top: 20px; /* Padding for content below nav */
+        }
+
+        #full-portfolio.animate-in {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .portfolio-container { /* Re-purposed for the actual content sections */
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 1200px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4), 0 0 50px rgba(0, 255, 255, 0.2); /* Futuristic glow */
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 95%; /* Make it slightly narrower */
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-section p {
+            font-size: 1.2em;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: #E0FFFF; /* Lighter cyan for summary */
+        }
+
+        .nav-links { /* This is for the internal nav links, not the main one */
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 30px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .nav-links a {
+            font-size: 1.1em;
+            font-weight: 600;
+            text-decoration: none;
+            color: #00FFFF; /* Cyan for nav links */
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.6);
+        }
+
+        #nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+            transition: left 0.7s ease-in-out;
+            z-index: 0;
+        }
+
+        #nav-links a:hover::before {
+            left: 100%;
+        }
+
+        #nav-links a:hover {
+            color: #FFFFFF; /* White on hover */
+            background-color: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+            transform: translateY(-2px);
+            text-shadow: 0 0 8px #FFFFFF, 0 0 15px #FFFFFF;
+        }
+
+        .portfolio-section {
+            width: 100%;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            display: flex; /* Added for button alignment */
+            flex-direction: column; /* Added for button alignment */
+            align-items: center; /* Added for button alignment */
+        }
+
+        .portfolio-section h2 {
+            font-size: 2.2em;
+            font-weight: 600;
+            color: #39FF14; /* Neon green for section headings */
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.8), 0 0 15px rgba(57, 255, 20, 0.6);
+        }
+
+        .portfolio-section ul {
+            list-style: none;
+            padding: 0;
+            width: 100%; /* Ensure ul takes full width of parent */
+        }
+
+        .portfolio-section li {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            line-height: 1.5;
+            color: #E0FFFF; /* Lighter cyan for list items */
+            border-left: 3px solid #00FFFF;
+            padding-left: 15px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer; /* Make list items clickable */
+        }
+
+        .portfolio-section li:hover {
+            background-color: rgba(0, 255, 255, 0.05);
+            transform: translateX(5px);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+        }
+
+        .portfolio-section strong {
+            color: #FFFFFF; /* Pure white for strong text */
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+
+        .project-item {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed rgba(0, 255, 255, 0.3);
+            width: 100%; /* Ensure project item takes full width */
+        }
+        .project-item:last-child {
+            border-bottom: none;
+        }
+        .project-item h3 {
+            font-size: 1.5em;
+            color: #39FF14;
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.8);
+        }
+        .project-item p {
+            font-size: 1em;
+            color: #E0FFFF;
+            margin-bottom: 5px;
+        }
+        .project-item a {
+            color: #00FFFF;
+            text-decoration: underline;
+            transition: color 0.2s ease;
+        }
+        .project-item a:hover {
+            color: #FFFFFF;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%; /* Ensure skills grid takes full width */
+        }
+
+        .skill-category {
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .skill-category h3 {
+            font-size: 1.3em;
+            color: #39FF14;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.8);
+        }
+        .skill-category ul {
+            list-style: disc;
+            margin-left: 20px;
+            color: #E0FFFF;
+        }
+        .skill-category li {
+            margin-bottom: 5px;
+            border-left: none; /* Override general li style */
+            padding-left: 0;
+        }
+
+        /* Styles for new content containers */
+        .content-display-container {
+            position: fixed;
+            top: var(--header-total-height-full); /* Position below the fixed header */
+            left: 0;
+            width: 100%;
+            height: calc(100vh - var(--header-total-height-full)); /* Fill remaining viewport height */
+            background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
+            backdrop-filter: blur(8px);
+            z-index: 30; /* Below header, above full-portfolio and intro-screen */
+            display: flex;
+            flex-direction: column; /* Changed to column for stacking */
+            justify-content: center; /* Center content vertically initially */
+            align-items: center;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+        }
+
+        .content-display-container.show {
+            opacity: 1;
+            visibility: visible;
+            transition-delay: 0s;
+        }
+
+        .content-display-container img {
+            max-width: 90%;
+            /* Adjusted max-height to provide space for controls and increase image size */
+            max-height: calc(100% - 120px); /* Increased image size, leaving more space for controls */
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+            margin-bottom: 0; /* No margin-bottom as controls are absolute */
+            transform: scale(1); /* Default scale for images */
+            transition: transform 0.2s ease-out; /* Smooth zoom transition */
+            flex-grow: 1; /* Allow image to grow and take available space */
+        }
+
+        .ongoing-note {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #FF0000; /* Bright red */
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+            padding: 20px;
+            border: 2px solid #FF0000;
+            border-radius: 10px;
+            background-color: rgba(255, 0, 0, 0.1);
+            margin-bottom: 20px; /* Adjusted margin for consistency */
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Styles for the main heading container - now visible again */
+        #main-heading-container {
+            width: 100%;
+            text-align: center;
+            padding-top: 1rem; /* Added padding to push text down from top of fixed header */
+            padding-bottom: 0.5rem;
+            display: block; /* Make this element visible again */
+        }
+
+        #main-heading-container h1 {
+            font-size: 3.5em; /* Adjusted for larger, radiant heading */
+            text-shadow: 0 0 15px rgba(0, 255, 255, 1), 0 0 30px rgba(0, 255, 255, 0.8), 0 0 45px rgba(0, 255, 255, 0.6); /* Re-added text-shadow */
+        }
+
+        .carousel-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .carousel-controls button {
+            padding: 0.75rem 1.5rem;
+            background-color: #00FFFF;
+            color: #000000;
+            font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .carousel-controls button:hover {
+            background-color: #39FF14;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.7);
+            transform: scale(1.05);
+        }
+
+        /* Ensure Go Back button in display containers has consistent spacing */
+        .content-display-container .go-back-button {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        /* Styles for resume-specific controls */
+        .resume-controls {
+            position: absolute; /* Position absolutely to stay visible */
+            bottom: 80px; /* Decreased distance from bottom to bring closer to go back */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 31; /* Ensure it's above the image */
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background for readability */
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .resume-controls button {
+            padding: 0.75rem 1.5rem;
+            background-color: #00FFFF;
+            color: #000000;
+            font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .resume-controls button:hover {
+            background-color: #39FF14;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.7);
+            transform: scale(1.05);
+        }
+
+        /* Go back button in resume section */
+        #image-display-container #single-image-back-btn {
+            position: absolute;
+            bottom: 20px; /* Adjusted to maintain space */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 31; /* Ensure it's above the image */
+        }
+
+        /* Styles for Get in Touch section text visibility */
+        #get-in-touch-section p,
+        #get-in-touch-section li {
+            color: #E0FFFF; /* Lighter cyan for main text */
+            text-shadow: 0 0 5px rgba(224, 255, 255, 0.6); /* Subtle glow for readability */
+            font-size: 1.15em; /* Slightly larger font size for better readability */
+        }
+
+        #get-in-touch-section small {
+            color: #90EE90; /* Light green for small notes */
+            text-shadow: 0 0 3px rgba(144, 238, 144, 0.5); /* Subtle glow */
+            font-size: 0.95em; /* Keep small text readable */
+        }
+
+        #get-in-touch-section a {
+            color: #00FFFF; /* Cyan for links */
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.7); /* Stronger glow for links */
+        }
+
+        @media (max-width: 768px) {
+            #initial-banner {
+                font-size: 2em;
+            }
+            #intro-screen {
+                flex-direction: column;
+                height: auto;
+                min-height: calc(100vh - var(--header-total-height-full));
+            }
+            #summary-panel {
+                width: 100%;
+                height: auto;
+                padding-bottom: 1rem;
+            }
+            #video-photo-panel {
+                width: 100%;
+                height: 50vh;
+                padding-bottom: 0;
+            }
+            .photo-placeholder {
+                margin-top: -50px;
+            }
+            #main-heading-container h1 {
+                font-size: 2.5em;
+            }
+            .header-section p {
+                font-size: 1em;
+            }
+            #main-nav {
+                flex-direction: column;
+                gap: 10px;
+                padding: 8px 10px;
+                margin-top: 10px;
+            }
+            #main-nav a {
+                width: 90%;
+                text-align: center;
+                font-size: 0.9em;
+            }
+            .portfolio-section h2 {
+                font-size: 1.8em;
+            }
+            .portfolio-section li {
+                font-size: 1em;
+            }
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+            .ongoing-note {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            .content-display-container img {
+                max-width: 95%;
+                max-height: calc(100% - 100px); /* Adjusted for mobile to leave more space for controls and larger image */
+            }
+            .carousel-controls {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            .resume-controls {
+                flex-direction: column;
+                gap: 10px;
+                bottom: 100px; /* Adjusted position for mobile for more space */
+                width: auto; /* Allow width to adjust */
+                padding: 8px 15px;
+            }
+            #image-display-container #single-image-back-btn {
+                bottom: 30px; /* Adjusted position for mobile */
+            }
+            #get-in-touch-section p,
+            #get-in-touch-section li {
+                font-size: 1em; /* Adjust font size for mobile */
+            }
+            #get-in-touch-section small {
+                font-size: 0.85em; /* Adjust font size for mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted playsinline id="bg-video"></video>
+
+    <div id="initial-banner">
+        Explore the Professional Portfolio of Kumar Shubham
+    </div>
+
+    <header>
+        <div id="main-heading-container">
+            <h1 class="text-4xl font-bold text-white" style="text-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.6);">Kumar Shubham | Portfolio</h1>
+        </div>
+        <nav id="main-nav">
+            <a href="#" onclick="showSection('education-section'); return false;">Education Qualifications</a>
+            <a href="#" onclick="showSection('internships-section'); return false;">Internships</a>
+            <a href="#" onclick="showSection('work-certs-section'); return false;">Work History & Certifications</a>
+            <a href="#" onclick="showSection('projects-section'); return false;">Projects</a>
+            <a href="#" onclick="showSection('skills-section'); return false;">Technical Skills</a>
+            <a href="#" onclick="showImage('resume.png', 'resume-section'); return false;">Resume</a>
+            <a href="#" onclick="showSection('coursework-section'); return false;">Relevant Coursework</a>
+        </nav>
+    </header>
+
+    <main>
+        <div id="intro-screen">
+            <div id="summary-panel">
+                <p id="typed-summary"></p>
+                <button id="get-in-touch-button" class="mt-8" onclick="showSection('get-in-touch-section'); return false;">Get in Touch</button>
+            </div>
+            <div id="video-photo-panel">
+                <div class="photo-placeholder">
+                    <img src="sure1.png" alt="Kumar Shubham Profile Photo" onerror="this.onerror=null;this.src='https://placehold.co/250x250/00FFFF/FFFFFF?text=Profile+Image';" />
+                </div>
+            </div>
+        </div>
+
+        <div id="full-portfolio" class="hidden">
+            <div class="portfolio-container">
+                <div class="header-section">
+                    <p>
+                        Motivated and detail-oriented Computer Science student with a proven track record of strong problem-solving abilities,
+                        exceptional technical expertise, and a passion for embracing new challenges. Eager to leverage a solid foundation in
+                        programming, software development, and analytical thinking, coupled with hands-on internship experience, to drive
+                        impactful contributions in a dynamic and innovative environment. Committed to continuous learning and growth, with a
+                        focus on delivering creative solutions to complex technical problems.
+                    </p>
+                </div>
+
+                <div class="nav-links">
+                    <a href="#" onclick="showSection('education-section'); return false;">Education Qualifications</a>
+                    <a href="#" onclick="showSection('internships-section'); return false;">Internships</a>
+                    <a href="#" onclick="showSection('work-certs-section'); return false;">Work History & Certifications</a>
+                    <a href="#" onclick="showSection('projects-section'); return false;">Projects</a>
+                    <a href="#" onclick="showSection('skills-section'); return false;">Technical Skills</a>
+                    <a href="#" onclick="showSection('coursework-section'); return false;">Relevant Coursework</a>
+                </div>
+
+                <div id="education-section" class="portfolio-section hidden">
+                    <h2>Education Qualifications</h2>
+                    <ul>
+                        <li onclick="showOngoingNote()">
+                            <strong>C.V. Raman Global University</strong> Aug 2023 – Jun 2026<br>
+                            Bachelor of Technology In Computer Science and Engineering<br>
+                            Bhubaneswar, Odisha
+                        </li>
+                        <li onclick="showImage('rg1.jpg', 'education-section')">
+                            <strong>Radha Govind University</strong> Aug 2020 – Jun 2023<br>
+                            Polytechnic in Computer Science<br>
+                            Ramgarh, Jharkhand
+                        </li>
+                        <li onclick="showImage('loyola.jpg', 'education-section')">
+                            <strong>Loyola School</strong> Mar 2009 – Mar 2020<br>
+                            Passed 10th Boards Examinations<br>
+                            Jamshedpur, Jharkhand
+                        </li>
+                    </ul>
+                    <button class="go-back-button" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+
+                <div id="internships-section" class="portfolio-section hidden">
+                    <h2>Internships</h2>
+                    <ul>
+                        <li onclick="showImage('tata.jpg', 'internships-section')">
+                            <strong>Tata Prashikshan</strong> 05 June 2024 – 03 July 2024<br>
+                            Internship Project on IOT Based Health Band for TATA Steel<br>
+                            Jamshedpur, Jharkhand<br>
+                            Transformation Department :<br>
+                            - Designed and implemented key system components for an IoT-based health monitoring device,
+                            including sensor integration and real-time data processing.<br>
+                            - Collaborated with a multidisciplinary team to troubleshoot issues, enhance functionality, and
+                            document project workflows.
+                        </li>
+                    </ul>
+                    <button class="go-back-button" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+
+                <div id="work-certs-section" class="portfolio-section hidden">
+                    <h2>Work History & Certifications</h2>
+                    <ul>
+                        <li onclick="showCarouselImages(['cs0.png', 'cs1.jpg', 'cs2.jpg', 'cs3.jpg', 'cs4.jpg'], 'work-certs-section')">
+                            <strong>Google Coursera:</strong> Completed Cloud Computing internship and Git, GitHub course certification. (17 August 2024 – 17 September 2024)
+                        </li>
+                        <li onclick="showCarouselImages(['jp.jpg', 'tataf.jpg', 'del.jpg', 'aws.jpg', 'accenture.jpg', 'gs.jpg', 'pwc.jpg', 'walmart.jpg'], 'work-certs-section')">
+                            <strong>Forage:</strong> Successfully completed Forage simulations during (April – May).<br>
+                            &bull; J.P. Morgan Chase & Co.: Kafka, H2, Rest API integrations.<br>
+                            &bull; TATA: Business scenarios, visuals, insights communication.<br>
+                            &bull; Deloitte: Data analysis and Forensic technology.<br>
+                            &bull; AWS: Design scalable and Hosting architecture.<br>
+                            &bull; Accenture: Cleaning, modeling, storytelling, presentation.<br>
+                            &bull; Goldman Sachs: Client profiling and real estate risk analysis.<br>
+                            &bull; PWC: Cybersecurity simulation: risk, SDLC, ITGC, control testing.<br>
+                            &bull; Walmart: Data structures, architecture, databases, munging.
+                        </li>
+                        <li onclick="showImage('ibm.jpg', 'work-certs-section')">
+                            <strong>IBM:</strong> Recognized for commitment to excellence in Cybersecurity Fundamentals. (13th May 2025).
+                        </li>
+                        <li onclick="showImage('oracle.jpg', 'work-certs-section')">
+                            <strong>Oracle:</strong> Recognized for successful completion of Databases for Developers. (10th May 2025).
+                        </li>
+                    </ul>
+                    <button class="go-back-button" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+
+                <div id="projects-section" class="portfolio-section hidden">
+                    <h2>Projects</h2>
+                    <div class="project-item">
+                        <h3>Collectors Paradise Platform</h3>
+                        <p>Engineered and launched a specialized platform catering to collectors of rare and valuable items, Accessible at <a href="http://www.collectorsparadise.tech" target="_blank">www.collectorsparadise.tech</a></p>
+                        <ul>
+                            <li>Created intuitive, user-friendly interface Enhancing experience.</li>
+                            <li>Integrated advanced search for precise item Discovery.</li>
+                            <li>Implemented detailed categorization and filtering options.</li>
+                            <li>Ensured responsive design across all devices.</li>
+                            <li>Maintained scalable architecture for future expansions.</li>
+                            <li>Developed platform to connect collectors and facilitate transactions.</li>
+                        </ul>
+                    </div>
+                    <button class="go-back-button" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+
+                <div id="skills-section" class="portfolio-section hidden">
+                    <h2>Technical Skills</h2>
+                    <div class="skills-grid">
+                        <div class="skill-category">
+                            <h3>Languages</h3>
+                            <ul>
+                                <li>Python</li>
+                                <li>C++</li>
+                                <li>HTML</li>
+                                <li>SQL</li>
+                                <li>Java</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h3>Developer Tools</h3>
+                            <ul>
+                                <li>VS Code</li>
+                                <li>Eclipse</li>
+                                <li>Google Colab</li>
+                                <li>Microsoft Office</li>
+                                <li>Dev C++</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h3>Technologies/Frameworks</h3>
+                            <ul>
+                                <li>Linux</li>
+                                <li>Windows</li>
+                                <li>Git</li>
+                                <li>GitHub</li>
+                                <li>Bootstrap</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h3>Concepts</h3>
+                            <ul>
+                                <li>Data Structures and Algorithms</li>
+                                <li>Object-Oriented Programming</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h3>Cloud Platforms</h3>
+                            <ul>
+                                <li>AWS</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button class="go-back-button" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+
+                <div id="resume-section" class="portfolio-section hidden">
+                    <h2>Resume</h2>
+                    <p>Click the "Go Back" button to return to the main portfolio.</p>
+                    <button class="go-back-button" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+
+                <div id="coursework-section" class="portfolio-section hidden">
+                    <h2>Relevant Coursework</h2>
+                    <ul>
+                        <li>Data Structures and Algorithms.</li>
+                        <li>Introduction to Computer Programming.</li>
+                        <li>OS:- Threads, Memory, Processes.</li>
+                        <li>Technical Skills</li>
+                        <li>Computer Organization and Embedded Systems.</li>
+                        <li>Databases SQL/ NoSQL.</li>
+                        <li>Networking Protocols, Security.</li>
+                    </ul>
+                    <button class="go-back-button" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+
+                <div id="get-in-touch-section" class="portfolio-section hidden">
+                    <h2>Get in Touch</h2>
+                    <p class="text-lg mb-6 text-center max-w-2xl">
+                        You are welcome to connect for opportunities related to software development, collaborative projects, internships, or any professional engagements in the fields of web development, cloud computing, and open-source contributions. I value clear communication, prompt collaboration, and long-term growth-driven partnerships.
+                    </p>
+                    <p class="text-lg mb-6 text-center max-w-2xl">
+                        Please find my contact details below:
+                    </p>
+                    <ul class="list-none p-0 text-left w-full max-w-md">
+                        <li class="mb-4">
+                            <strong>👤 Name:</strong><br>
+                            Kumar Shubham
+                        </li>
+                        <li class="mb-4">
+                            <strong>📞 Phone:</strong><br>
+                            +91 78570 38826<br>
+                            <small>Available for calls and WhatsApp communication during standard business hours (IST).</small>
+                        </li>
+                        <li class="mb-4">
+                            <strong>📧 Email:</strong><br>
+                            <a href="mailto:sumit1twothree@gmail.com" class="text-blue-400 hover:text-blue-200 transition-colors">sumit1twothree@gmail.com</a><br>
+                            <small>Please allow 24–48 hours for a response to email inquiries.</small>
+                        </li>
+                        <li class="mb-4">
+                            <strong>💻 GitHub Profile:</strong><br>
+                            <a href="https://github.com/Shubham-1444" target="_blank" class="text-blue-400 hover:text-blue-200 transition-colors">github.com/Shubham-1444</a><br>
+                            <small>Explore my repositories, contributions, and active projects in web development, C++, Python, and more.</small>
+                        </li>
+                        <li class="mb-4">
+                            <strong>💼 LinkedIn Profile:</strong><br>
+                            <a href="https://linkedin.com/in/kumar-shubham-444557347" target="_blank" class="text-blue-400 hover:text-blue-200 transition-colors">linkedin.com/in/kumar-shubham-444557347</a><br>
+                            <small>Connect with me professionally, view endorsements, and explore my career journey and technical interests.</small>
+                        </li>
+                    </ul>
+                    <p class="text-lg mt-6 text-center max-w-2xl">
+                        For any queries or professional discussions, feel free to initiate contact through any of the above mediums. I look forward to meaningful and constructive engagement.
+                    </p>
+                    <button class="go-back-button mt-8" onclick="showIntroScreen()">Go Back to Home</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="image-display-container" class="content-display-container hidden">
+        <img id="displayed-image" src="" alt="Degree/Certificate">
+        <div class="resume-controls hidden">
+            <button id="zoom-in-btn">Zoom In</button>
+            <button id="reset-zoom-btn">Reset Zoom</button>
+            <button id="zoom-out-btn">Zoom Out</button>
+        </div>
+        <button class="go-back-button" id="single-image-back-btn" onclick="showIntroScreen()">Go Back</button>
+    </div>
+
+    <div id="ongoing-note-container" class="content-display-container hidden">
+        <p class="ongoing-note">
+            C.V. Raman Global University: Ongoing and will be completed by 2026.
+        </p>
+        <button class="go-back-button" onclick="showSection('education-section')">Go Back</button>
+    </div>
+
+    <div id="carousel-display-container" class="content-display-container hidden">
+        <img id="carousel-displayed-image" src="" alt="Certificate/Project Detail">
+        <div class="carousel-controls">
+            <button id="prev-carousel-btn" class="go-back-button">Previous</button>
+            <button id="next-carousel-btn" class="go-back-button">Next</button>
+        </div>
+        <button class="go-back-button" id="carousel-back-btn">Go Back</button>
+    </div>
+
+    <script>
+        let currentCarouselImages = [];
+        let currentCarouselIndex = 0;
+        let currentBackToSectionId = ''; // To store which section to go back to from carousel
+        let currentImageScale = 1; // For zooming functionality
+
+        // New state variables for dragging
+        let isDragging = false;
+        let startY = 0;
+        let currentYOffset = 0; // Initial vertical offset for image panning
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const videoElement = document.getElementById("bg-video");
+            const initialBanner = document.getElementById("initial-banner");
+            const introScreen = document.getElementById("intro-screen");
+            const fullPortfolio = document.getElementById("full-portfolio");
+            const typedSummaryElement = document.getElementById("typed-summary");
+            const getInTouchButton = document.getElementById("get-in-touch-button");
+            const headerElement = document.querySelector('header');
+            const mainNav = document.getElementById("main-nav");
+            const mainContent = document.querySelector('main');
+            const displayedImage = document.getElementById('displayed-image');
+
+
+            const fullSummaryText = `Motivated and detail-oriented Computer Science student with strong problem-solving skills and solid technical expertise. Experienced in programming, software development, and analytical thinking, with internship exposure. Eager to contribute to dynamic teams and deliver innovative, efficient solutions while continuously learning and growing.`;
+            let charIndex = 0;
+            const typingSpeed = 30;
+
+            function typeWriter() {
+                if (charIndex < fullSummaryText.length) {
+                    typedSummaryElement.textContent += fullSummaryText.charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeWriter, typingSpeed);
+                }
+            }
+
+            const video1Src = "zmr1.mp4";
+            const video2Src = "zmr.mp4";
+
+            videoElement.src = video1Src;
+            videoElement.load();
+            videoElement.play();
+            videoElement.loop = false;
+
+            // Set initial padding for main content based on the header height (which now includes heading)
+            mainContent.style.paddingTop = 'var(--main-heading-height)';
+
+
+            videoElement.addEventListener('ended', () => {
+                if (videoElement.src.includes(video1Src)) {
+                    videoElement.src = video2Src;
+                    videoElement.loop = true;
+                    videoElement.load();
+                    videoElement.play();
+
+                    initialBanner.classList.add('roll-up');
+                    initialBanner.addEventListener('transitionend', () => {
+                        initialBanner.style.display = 'none';
+                        
+                        headerElement.classList.add('show'); // Make the fixed header visible and slide down
+                        mainNav.classList.add('show-nav'); // Show navigation with zoom out effect
+
+                        // Adjust main content padding-top to account for the now visible full header
+                        mainContent.style.paddingTop = 'var(--header-total-height-full)';
+
+                        introScreen.classList.remove('hidden'); // Make intro screen visible
+                        introScreen.classList.add('show-intro'); // Trigger intro screen animation
+                        typeWriter(); // Start typing effect
+                    }, { once: true });
+                }
+            });
+
+            setTimeout(() => {
+                initialBanner.classList.add('show');
+            }, 5000);
+
+            // Make the new Get in Touch button functional
+            if (getInTouchButton) {
+                getInTouchButton.classList.remove('disabled-button'); // Remove disabled style
+                getInTouchButton.onclick = () => showSection('get-in-touch-section'); // Make it functional
+            }
+
+            // Transition from intro screen to full portfolio when "Explore Portfolio" (now "Get in Touch") is clicked
+            // or when the intro screen's fade-out animation completes.
+            // The 'Explore Portfolio' button is now 'Get in Touch' and is non-functional.
+            // The transition to full portfolio will happen when the intro screen fades out.
+            introScreen.addEventListener('transitionend', (e) => {
+                // Ensure this only runs for the fade-out transition
+                if (e.propertyName === 'opacity' && introScreen.classList.contains('fade-out')) {
+                    introScreen.style.display = 'none';
+                    fullPortfolio.classList.remove('hidden'); // Make full-portfolio visible
+                    fullPortfolio.classList.add('animate-in');
+                    window.scrollTo(0, 0);
+                    showSection('internships-section'); // Show Internships by default after intro
+                }
+            });
+
+            // Carousel control event listeners
+            document.getElementById('prev-carousel-btn').addEventListener('click', prevCarouselImage);
+            document.getElementById('next-carousel-btn').addEventListener('click', nextCarouselImage);
+            document.getElementById('carousel-back-btn').addEventListener('click', () => showSection(currentBackToSectionId));
+
+            // Resume specific button listeners
+            document.getElementById('zoom-in-btn').addEventListener('click', zoomInResume);
+            document.getElementById('zoom-out-btn').addEventListener('click', zoomOutResume);
+            document.getElementById('reset-zoom-btn').addEventListener('click', resetZoomResume);
+
+        });
+
+        // Function to show the initial intro screen (summary and profile photo)
+        function showIntroScreen() {
+            console.log('Attempting to show intro screen.');
+            const introScreen = document.getElementById("intro-screen");
+            const fullPortfolio = document.getElementById("full-portfolio");
+
+            // Hide the full portfolio
+            fullPortfolio.classList.add('hidden');
+            fullPortfolio.classList.remove('animate-in'); // Remove animation class if present
+
+            // Hide any open content display containers
+            hideAllContentDisplayContainers();
+
+            // Show the intro screen
+            introScreen.classList.remove('hidden');
+            introScreen.style.display = 'flex'; // Ensure it's flex for layout
+            introScreen.classList.add('show-intro'); // Re-apply show animation
+            introScreen.classList.remove('fade-out'); // Remove fade-out if it was there
+
+            window.scrollTo(0, 0); // Scroll to top
+            console.log('Intro screen should be visible.');
+        }
+
+        // Helper function to hide all specific content display containers (images, notes, carousel)
+        function hideAllContentDisplayContainers() {
+            document.getElementById('image-display-container').classList.add('hidden');
+            document.getElementById('image-display-container').classList.remove('show');
+            document.getElementById('ongoing-note-container').classList.add('hidden');
+            document.getElementById('ongoing-note-container').classList.remove('show');
+            document.getElementById('carousel-display-container').classList.add('hidden');
+            document.getElementById('carousel-display-container').classList.remove('show');
+            document.querySelector('.resume-controls').classList.add('hidden'); // Hide resume controls
+            
+            // Reset zoom and position for displayed image when hiding
+            const displayedImage = document.getElementById('displayed-image');
+            displayedImage.style.transform = 'scale(1) translateY(0px)'; // Reset zoom and Y offset
+            currentImageScale = 1; // Reset scale
+            currentYOffset = 0; // Reset Y offset
+            displayedImage.style.cursor = 'default'; // Reset cursor
+            displayedImage.removeEventListener('pointerdown', handlePointerDown); // Remove listener
+        }
+
+        function showSection(sectionId) {
+            console.log('--- showSection called for:', sectionId, '---');
+
+            const introScreen = document.getElementById("intro-screen");
+            const fullPortfolio = document.getElementById("full-portfolio");
+            const headerElement = document.querySelector('header'); /* Get header element */
+            const mainNav = document.getElementById("main-nav"); /* Get main nav element */
+            const headerSection = fullPortfolio.querySelector('.header-section');
+            const navLinks = fullPortfolio.querySelector('.nav-links');
+
+            // Hide any open content display containers
+            hideAllContentDisplayContainers();
+
+            // Step 1: Hide intro screen immediately
+            if (!introScreen.classList.contains('hidden')) {
+                introScreen.classList.add('hidden');
+                introScreen.style.display = 'none'; // Force hide
+                introScreen.classList.remove('show-intro', 'fade-out'); // Clean up classes
+                console.log('Intro screen hidden.');
+            }
+
+            // Step 2: Ensure full-portfolio is visible
+            if (fullPortfolio.classList.contains('hidden')) {
+                fullPortfolio.classList.remove('hidden');
+                fullPortfolio.classList.add('animate-in');
+                // Force immediate visibility properties if animations are not desired on direct click
+                fullPortfolio.style.opacity = '1';
+                fullPortfolio.style.transform = 'scale(1)';
+                console.log('Full portfolio made visible.');
+            }
+
+            // Ensure header and main nav are always visible when a section is shown
+            headerElement.classList.add('show');
+            mainNav.classList.add('show-nav');
+            console.log('Ensured header and main nav are visible.');
+
+
+            // Step 3: Hide all individual content sections within full-portfolio
+            const contentSections = [
+                'education-section',
+                'internships-section',
+                'work-certs-section',
+                'projects-section',
+                'skills-section',
+                'resume-section', // Added resume-section here
+                'coursework-section',
+                'get-in-touch-section' // Added new get-in-touch-section
+            ];
+
+            contentSections.forEach(id => {
+                const sectionElement = document.getElementById(id);
+                if (sectionElement) {
+                    sectionElement.classList.add('hidden');
+                    sectionElement.style.display = 'none'; // Also force display: none
+                    console.log('Explicitly hid section:', id);
+                }
+            });
+
+            // Step 4: Handle showing/hiding summary and internal nav
+            // This function is primarily for showing specific sections within the full-portfolio
+            console.log('Transitioning to specific section:', sectionId);
+            // Hide the main summary and internal navigation for specific section views
+            if (headerSection) {
+                headerSection.classList.add('hidden');
+                headerSection.style.display = 'none';
+                console.log('Hid header-section (summary).');
+            }
+            if (navLinks) {
+                navLinks.classList.add('hidden');
+                navLinks.style.display = 'none';
+                console.log('Hid nav-links (internal navigation).');
+            }
+
+            // Show the target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                targetSection.style.display = 'flex'; // Assuming portfolio-section uses flex
+                console.log('Successfully showed target section:', sectionId);
+            } else {
+                console.error('Section not found:', sectionId);
+            }
+            window.scrollTo(0, 0); // Scroll to top of the page when changing sections
+        }
+
+        // Function for displaying a single image
+        function showImage(imageUrl, backToSectionId) {
+            console.log('Showing image:', imageUrl);
+            // Hide all main portfolio sections and the intro screen
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('full-portfolio').classList.add('hidden');
+            
+            // Hide all content display containers first
+            hideAllContentDisplayContainers();
+
+            const imageDisplayContainer = document.getElementById('image-display-container');
+            const displayedImage = document.getElementById('displayed-image');
+            const resumeControls = document.querySelector('.resume-controls');
+
+            displayedImage.src = imageUrl;
+            // Fallback for images not found
+            displayedImage.onerror = function() {
+                this.src = `https://placehold.co/400x300/00FFFF/FFFFFF?text=${imageUrl.split('.')[0].toUpperCase()}+Image`;
+                console.warn(`Image not found: ${imageUrl}, showing placeholder.`);
+            };
+
+            // Show resume controls if the image is the resume
+            if (imageUrl === 'resume.png') {
+                resumeControls.classList.remove('hidden');
+                currentImageScale = 1; // Reset zoom for resume image
+                currentYOffset = 0; // Reset offset for resume image
+                displayedImage.style.transform = `scale(${currentImageScale}) translateY(${currentYOffset}px)`;
+                displayedImage.style.cursor = 'grab'; // Set initial grab cursor
+                displayedImage.addEventListener('pointerdown', handlePointerDown); // Add listener
+            } else {
+                resumeControls.classList.add('hidden');
+                displayedImage.style.cursor = 'default'; // Reset cursor for other images
+                displayedImage.removeEventListener('pointerdown', handlePointerDown); // Remove listener
+                currentYOffset = 0; // Reset offset for other images too
+            }
+
+            imageDisplayContainer.classList.remove('hidden');
+            imageDisplayContainer.classList.add('show');
+            window.scrollTo(0, 0);
+        }
+
+        // Function for displaying the ongoing note
+        function showOngoingNote() {
+            console.log('Showing ongoing note.');
+            // Hide all main portfolio sections and the intro screen
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('full-portfolio').classList.add('hidden');
+
+            // Hide all content display containers first
+            hideAllContentDisplayContainers();
+
+            const ongoingNoteContainer = document.getElementById('ongoing-note-container');
+            ongoingNoteContainer.classList.remove('hidden');
+            ongoingNoteContainer.classList.add('show');
+            window.scrollTo(0, 0);
+        }
+
+        // New functions for carousel display
+        function showCarouselImages(imagesArray, backToSectionId) {
+            console.log('Showing carousel images:', imagesArray);
+            currentCarouselImages = imagesArray;
+            currentCarouselIndex = 0;
+            currentBackToSectionId = backToSectionId; // Store the section to go back to
+
+            // Hide all main portfolio sections and the intro screen
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('full-portfolio').classList.add('hidden');
+
+            // Hide all content display containers first
+            hideAllContentDisplayContainers();
+
+            const carouselDisplayContainer = document.getElementById('carousel-display-container');
+            const carouselDisplayedImage = document.getElementById('carousel-displayed-image');
+
+            carouselDisplayedImage.src = currentCarouselImages[currentCarouselIndex];
+            carouselDisplayedImage.onerror = function() {
+                this.src = `https://placehold.co/400x300/00FFFF/FFFFFF?text=Image+${currentCarouselIndex+1}`;
+                console.warn(`Carousel image not found: ${currentCarouselImages[currentCarouselIndex]}, showing placeholder.`);
+            };
+
+            carouselDisplayContainer.classList.remove('hidden');
+            carouselDisplayContainer.classList.add('show');
+            window.scrollTo(0, 0);
+        }
+
+        function nextCarouselImage() {
+            currentCarouselIndex = (currentCarouselIndex + 1) % currentCarouselImages.length;
+            document.getElementById('carousel-displayed-image').src = currentCarouselImages[currentCarouselIndex];
+            document.getElementById('carousel-displayed-image').onerror = function() {
+                this.src = `https://placehold.co/400x300/00FFFF/FFFFFF?text=Image+${currentCarouselIndex+1}`;
+                console.warn(`Carousel image not found: ${currentCarouselImages[currentCarouselIndex]}, showing placeholder.`);
+            };
+        }
+
+        function prevCarouselImage() {
+            currentCarouselIndex = (currentCarouselIndex - 1 + currentCarouselImages.length) % currentCarouselImages.length;
+            document.getElementById('carousel-displayed-image').src = currentCarouselImages[currentCarouselIndex];
+            document.getElementById('carousel-displayed-image').onerror = function() {
+                this.src = `https://placehold.co/400x300/00FFFF/FFFFFF?text=Image+${currentCarouselIndex+1}`;
+                console.warn(`Carousel image not found: ${currentCarouselImages[currentCarouselIndex]}, showing placeholder.`);
+            };
+        }
+
+        // Resume specific functions
+        function zoomInResume() {
+            currentImageScale += 0.1; // Increase scale by 0.1
+            document.getElementById('displayed-image').style.transform = `scale(${currentImageScale}) translateY(${currentYOffset}px)`;
+        }
+
+        function zoomOutResume() {
+            currentImageScale = Math.max(0.5, currentImageScale - 0.1); // Decrease scale, but not below 0.5
+            document.getElementById('displayed-image').style.transform = `scale(${currentImageScale}) translateY(${currentYOffset}px)`;
+        }
+
+        function resetZoomResume() {
+            currentImageScale = 1; // Reset scale to original
+            currentYOffset = 0; // Reset vertical offset
+            document.getElementById('displayed-image').style.transform = `scale(${currentImageScale}) translateY(${currentYOffset}px)`;
+        }
+
+        // Dragging functions for the resume image
+        function handlePointerDown(e) {
+            // Only allow dragging if zoomed in
+            if (currentImageScale > 1) {
+                isDragging = true;
+                startY = e.clientY;
+                const displayedImage = document.getElementById('displayed-image');
+                displayedImage.style.cursor = 'grabbing'; // Change cursor to grabbing
+                displayedImage.setPointerCapture(e.pointerId); // Capture pointer events for continuous drag
+                document.addEventListener('pointermove', handlePointerMove);
+                document.addEventListener('pointerup', handlePointerUp);
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!isDragging) return;
+
+            const displayedImage = document.getElementById('displayed-image');
+            const deltaY = e.clientY - startY;
+            currentYOffset += deltaY; // Update offset
+            startY = e.clientY; // Update startY for next move
+
+            // Apply both scale and translateY.
+            displayedImage.style.transform = `scale(${currentImageScale}) translateY(${currentYOffset}px)`;
+        }
+
+        function handlePointerUp(e) {
+            isDragging = false;
+            const displayedImage = document.getElementById('displayed-image');
+            displayedImage.style.cursor = 'grab'; // Reset cursor to grab
+            displayedImage.releasePointerCapture(e.pointerId); // Release pointer capture
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerUp);
+        }
+    </script>
+</body>
+</html>
+
