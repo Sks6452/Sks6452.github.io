@@ -808,7 +808,7 @@
                 <div id="education-section" class="portfolio-section hidden">
                     <h2>Education Qualifications</h2>
                     <ul>
-                        <li onclick="showOngoingNote()">
+                        <li onclick="showOngoingNote('education-section')">
                             <strong>C.V. Raman Global University</strong> Aug 2023 – Jun 2026<br>
                             Bachelor of Technology In Computer Science and Engineering<br>
                             Bhubaneswar, Odisha
@@ -983,12 +983,12 @@
                         </li>
                         <li class="mb-4">
                             <strong>💻 GitHub Profile:</strong><br>
-                            <a href="https://github.com/Shubham-1444" target="_blank" class="text-blue-400 hover:text-blue-200 transition-colors">github.com/Shubham-1444</a><br>
+                            <a href="https://github.com/Sks6452" target="_blank" class="text-blue-400 hover:text-blue-200 transition-colors">github.com/Sks6452</a><br>
                             <small>Explore my repositories, contributions, and active projects in web development, C++, Python, and more.</small>
                         </li>
                         <li class="mb-4">
                             <strong>💼 LinkedIn Profile:</strong><br>
-                            <a href="https://linkedin.com/in/kumar-shubham-444557347" target="_blank" class="text-blue-400 hover:text-blue-200 transition-colors">linkedin.com/in/kumar-shubham-444557347</a><br>
+                            <a href="https://www.linkedin.com/in/shubham1444/" target="_blank" class="text-blue-400 hover:text-blue-200 transition-colors">linkedin.com/in/shubham1444/</a><br>
                             <small>Connect with me professionally, view endorsements, and explore my career journey and technical interests.</small>
                         </li>
                     </ul>
@@ -1008,23 +1008,26 @@
             <button id="reset-zoom-btn">Reset Zoom</button>
             <button id="zoom-out-btn">Zoom Out</button>
         </div>
-        <button class="go-back-button" id="single-image-back-btn" onclick="showIntroScreen()">Go Back</button>
+        <!-- Modified onclick to go back to the stored section -->
+        <button class="go-back-button" id="single-image-back-btn" onclick="showSection(currentBackToSectionId)">Go Back</button>
     </div>
 
     <div id="ongoing-note-container" class="content-display-container hidden">
         <p class="ongoing-note">
             C.V. Raman Global University: Ongoing and will be completed by 2026.
         </p>
-        <button class="go-back-button" onclick="showSection('education-section')">Go Back</button>
+        <!-- Modified onclick to go back to the stored section -->
+        <button class="go-back-button" onclick="showSection(currentBackToSectionId)">Go Back</button>
     </div>
 
     <div id="carousel-display-container" class="content-display-container hidden">
         <img id="carousel-displayed-image" src="" alt="Certificate/Project Detail">
         <div class="carousel-controls">
-            <button id="prev-carousel-btn" class="go-back-button">Previous</button>
-            <button id="next-carousel-btn" class="go-back-button">Next</button>
+            <button id="prev-carousel-btn">Previous</button>
+            <button id="next-carousel-btn">Next</button>
         </div>
-        <button class="go-back-button" id="carousel-back-btn">Go Back</button>
+        <!-- Modified onclick to go back to the stored section -->
+        <button class="go-back-button" id="carousel-back-btn" onclick="showSection(currentBackToSectionId)">Go Back</button>
     </div>
 
     <script>
@@ -1127,7 +1130,8 @@
             // Carousel control event listeners
             document.getElementById('prev-carousel-btn').addEventListener('click', prevCarouselImage);
             document.getElementById('next-carousel-btn').addEventListener('click', nextCarouselImage);
-            document.getElementById('carousel-back-btn').addEventListener('click', () => showSection(currentBackToSectionId));
+            // Modified: back button now calls showSection with currentBackToSectionId
+            // document.getElementById('carousel-back-btn').addEventListener('click', () => showSection(currentBackToSectionId));
 
             // Resume specific button listeners
             document.getElementById('zoom-in-btn').addEventListener('click', zoomInResume);
@@ -1266,6 +1270,8 @@
         // Function for displaying a single image
         function showImage(imageUrl, backToSectionId) {
             console.log('Showing image:', imageUrl);
+            currentBackToSectionId = backToSectionId; // Store the section to return to
+
             // Hide all main portfolio sections and the intro screen
             document.getElementById('intro-screen').classList.add('hidden');
             document.getElementById('full-portfolio').classList.add('hidden');
@@ -1305,8 +1311,10 @@
         }
 
         // Function for displaying the ongoing note
-        function showOngoingNote() {
+        function showOngoingNote(backToSectionId) {
             console.log('Showing ongoing note.');
+            currentBackToSectionId = backToSectionId; // Store the section to return to
+
             // Hide all main portfolio sections and the intro screen
             document.getElementById('intro-screen').classList.add('hidden');
             document.getElementById('full-portfolio').classList.add('hidden');
